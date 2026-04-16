@@ -3,7 +3,7 @@ import streamlit as st
 from anthropic import Anthropic
 
 # ─── CONFIGURAÇÃO ────────────────────────────────────
-client = Anthropic(api_key=os.environ["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"])
+client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 SYSTEM_CRIADOR = """Você é o maior especialista do mundo em criar agentes 
 de IA com Claude e em Prompt Engineering avançado.
