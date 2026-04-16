@@ -78,7 +78,7 @@ def gerar_copy(contexto, modo_aniversario=False, preco=None):
     if modo_aniversario and preco:
         prompt = f"Preço promocional: R${preco}. {contexto}"
     r = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-5",
         max_tokens=800,
         system=system,
         messages=[{"role": "user", "content": prompt}]

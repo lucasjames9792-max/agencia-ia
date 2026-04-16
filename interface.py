@@ -52,7 +52,7 @@ if "historico" not in st.session_state:
     st.session_state.historico = []
     # Mensagem de boas vindas automática
     bv = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-5",
         max_tokens=1000,
         system=SYSTEM_COPY,
         messages=[{"role": "user", "content":
@@ -86,7 +86,7 @@ if prompt := st.chat_input("Digite sua mensagem..."):
     with st.chat_message("assistant", avatar="✍️"):
         with st.spinner("Gerando copy..."):
             resposta = client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-sonnet-4-5",
                 max_tokens=2000,
                 system=SYSTEM_COPY,
                 messages=st.session_state.historico

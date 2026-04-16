@@ -56,7 +56,7 @@ st.caption("Crie copys de alta conversão para Instagram, TikTok e Twitter/X")
 if "historico" not in st.session_state:
     st.session_state.historico = []
     bv = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-5",
         max_tokens=1000,
         system=SYSTEM_COPY,
         messages=[{"role": "user", "content":
@@ -167,7 +167,7 @@ if "acao_rapida" in st.session_state and st.session_state.acao_rapida:
     with st.chat_message("assistant", avatar="✍️"):
         with st.spinner("Gerando copy..."):
             r = client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-sonnet-4-5",
                 max_tokens=2048,
                 system=SYSTEM_COPY,
                 messages=st.session_state.historico
@@ -193,7 +193,7 @@ if prompt := st.chat_input("Descreva a copy que precisa ou use as ações rápid
     with st.chat_message("assistant", avatar="✍️"):
         with st.spinner("Gerando copy..."):
             r = client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-sonnet-4-5",
                 max_tokens=2048,
                 system=SYSTEM_COPY,
                 messages=st.session_state.historico
