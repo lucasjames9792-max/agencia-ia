@@ -85,7 +85,7 @@ st.caption("Especialista em Prompt Engineering • Cria qualquer agente para sua
 if "historico" not in st.session_state:
     st.session_state.historico = []
     bv = client.messages.create(
-        model="claude-sonnet-4-5-20251001",
+        model="claude-sonnet-4-5-20250929",
         max_tokens=2000,
         system=SYSTEM_CRIADOR,
         messages=[{"role": "user", "content":
@@ -182,7 +182,7 @@ if "acao_rapida" in st.session_state and st.session_state.acao_rapida:
                 f"Interface: {st.session_state.get('interface', 'Web')}."
             )
             r = client.messages.create(
-                model="claude-sonnet-4-5-20251001",
+                model="claude-sonnet-4-5-20250929",
                 max_tokens=4000,
                 system=SYSTEM_CRIADOR,
                 messages=st.session_state.historico
@@ -214,7 +214,7 @@ if prompt := st.chat_input(
                 {"role": "user", "content": contexto}
             ]
             r = client.messages.create(
-                model="claude-sonnet-4-5-20251001",
+                model="claude-sonnet-4-5-20250929",
                 max_tokens=4000,
                 system=SYSTEM_CRIADOR,
                 messages=mensagens
