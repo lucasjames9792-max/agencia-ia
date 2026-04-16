@@ -5,7 +5,7 @@ from anthropic import Anthropic
 
 # ─── CONFIGURAÇÃO ────────────────────────────────────
 load_dotenv()
-client = Anthropic(api_key=os.environ["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"])
+client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 SYSTEM_CRIADOR = """Você é o maior especialista do mundo em criar agentes 
 de IA com Claude e em Prompt Engineering avançado.
