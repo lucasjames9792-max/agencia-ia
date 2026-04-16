@@ -10,6 +10,8 @@ from typing import List, Dict, Tuple
 import zipfile
 import io
 
+st.config.set_option('server.maxUploadSize', 2000)
+
 # ==================== CONFIGURAÇÃO DA PÁGINA ====================
 st.set_page_config(
     page_title="🎬 Agente Conversor Mass Media PRO",
