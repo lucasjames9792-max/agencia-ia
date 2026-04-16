@@ -3,7 +3,6 @@ import streamlit as st
 from anthropic import Anthropic
 
 # ─── CONFIGURAÇÃO ────────────────────────────────────
-load_dotenv()
 client = Anthropic(api_key=os.environ["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"])
 
 SYSTEM_CRIADOR = """Você é o maior especialista do mundo em criar agentes 
