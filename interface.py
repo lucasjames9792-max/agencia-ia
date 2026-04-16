@@ -1,11 +1,11 @@
-import os
+﻿import os
 import streamlit as st
 from dotenv import load_dotenv
 from anthropic import Anthropic
 
 # ─── CONFIGURAÇÃO ────────────────────────────────────
 load_dotenv()
-client = Anthropic(api_key=os.environ["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"])
+client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 SYSTEM_COPY = """Você é um especialista em copywriting de alta conversão 
 para marketing de criadores de conteúdo adulto responsável.
