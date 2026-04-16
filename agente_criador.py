@@ -1,11 +1,11 @@
 ﻿import os
 import streamlit as st
-from dotenv import load_dotenv
 from anthropic import Anthropic
 
 # ─── CONFIGURAÇÃO ────────────────────────────────────
-load_dotenv()
-client = Anthropic(api_key=os.environ["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"])
+client = Anthropic(api_key=os.environ["
+
+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"])
 
 SYSTEM_CRIADOR = """Você é o maior especialista do mundo em criar agentes 
 de IA com Claude e em Prompt Engineering avançado.
@@ -86,7 +86,6 @@ st.caption("Especialista em Prompt Engineering • Cria qualquer agente para sua
 # Inicializa histórico
 if "historico" not in st.session_state:
     st.session_state.historico = []
-    # Boas-vindas automáticas
     bv = client.messages.create(
         model="claude-sonnet-4-5-20251001",
         max_tokens=2000,
