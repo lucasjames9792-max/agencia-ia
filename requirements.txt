@@ -2,3 +2,5 @@ anthropic
 streamlit
 requests
 python-dotenv
+pandas
+zipfile36
