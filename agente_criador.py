@@ -5,7 +5,7 @@ from anthropic import Anthropic
 
 # ─── CONFIGURAÇÃO ────────────────────────────────────
 load_dotenv()
-client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+client = Anthropic(api_key=os.environ["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"])
 
 SYSTEM_CRIADOR = """Você é o maior especialista do mundo em criar agentes 
 de IA com Claude e em Prompt Engineering avançado.
@@ -88,7 +88,7 @@ if "historico" not in st.session_state:
     st.session_state.historico = []
     # Boas-vindas automáticas
     bv = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-5-20251001",
         max_tokens=2000,
         system=SYSTEM_CRIADOR,
         messages=[{"role": "user", "content":
@@ -185,7 +185,7 @@ if "acao_rapida" in st.session_state and st.session_state.acao_rapida:
                 f"Interface: {st.session_state.get('interface', 'Web')}."
             )
             r = client.messages.create(
-                model="claude-sonnet-4-5",
+                model="claude-sonnet-4-5-20251001",
                 max_tokens=4000,
                 system=SYSTEM_CRIADOR,
                 messages=st.session_state.historico
@@ -217,7 +217,7 @@ if prompt := st.chat_input(
                 {"role": "user", "content": contexto}
             ]
             r = client.messages.create(
-                model="claude-sonnet-4-5",
+                model="claude-sonnet-4-5-20251001",
                 max_tokens=4000,
                 system=SYSTEM_CRIADOR,
                 messages=mensagens
