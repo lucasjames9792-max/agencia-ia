@@ -11,4 +11,9 @@ COPY . .
 
 EXPOSE $PORT
 
-CMD streamlit run agente_conversor.py --server.port=$PORT --server.address=0.0.0.0
+CMD streamlit run agente_conversor.py \
+    --server.port=$PORT \
+    --server.address=0.0.0.0 \
+    --server.maxUploadSize=2048 \
+    --server.enableXsrfProtection=false \
+    --server.enableCORS=false
