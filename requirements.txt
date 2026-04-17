@@ -4,4 +4,3 @@ requests
 python-dotenv
 pandas
 zipfile36
-Pillow
