@@ -264,6 +264,43 @@ def convert_video(input_path: str, output_path: str, profile_config: Dict) -> Tu
     except Exception as e:
         return False, f"❌ Erro: {str(e)}", {}
 
+def comprimir_antes_converter(input_path: str, temp_dir: str) -> str:
+    """Comprime o vídeo se for maior que 200MB antes de converter"""
+    tamanho_mb = os.path.getsize(input_path) / (1024 * 1024)
+
+    if tamanho_mb <= 200:
+        return input_path  # Não precisa comprimir
+
+    # Definir perfil de compressão baseado no tamanho
+    if tamanho_mb > 1000:
+        crf = "28"
+        resolucao = "1280:720"
+    elif tamanho_mb > 500:
+        crf = "26"
+        resolucao = "1280:720"
+    else:
+        crf = "24"
+        resolucao = "1280:720"
+
+    output_path = os.path.join(temp_dir, "pre_comprimido_" + os.path.basename(input_path) + ".mp4")
+
+    cmd = [
+        'ffmpeg', '-i', input_path,
+        '-vf', f'scale={resolucao}:force_original_aspect_ratio=decrease',
+        '-c:v', 'libx264',
+        '-crf', crf,
+        '-preset', 'fast',
+        '-c:a', 'aac',
+        '-b:a', '128k',
+        '-y', output_path
+    ]
+
+    try:
+        subprocess.run(cmd, check=True, capture_output=True)
+        return output_path
+    except:
+        return input_path  # Se falhar, usa o original
+
 def create_zip_from_files(file_paths: List[str]) -> bytes:
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
@@ -281,7 +318,7 @@ if not ffmpeg_installed:
 
 # ==================== HEADER ====================
 st.markdown('<p class="big-font">🎬 AGENTE CONVERSOR MASS MEDIA PRO</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Processamento industrial de vídeos para criadores de conteúdo</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Processamento industrial de vídeos • Compressão automática para arquivos grandes</p>', unsafe_allow_html=True)
 
 # ==================== SIDEBAR ====================
 st.sidebar.header("⚙️ Configurações")
@@ -447,8 +484,16 @@ if st.session_state.processing and st.session_state.conversion_queue:
             individual_progress.progress(25)
             st.write("🔄 Iniciando conversão...")
 
+            # Comprimir automaticamente se arquivo for grande
+            tamanho_original = os.path.getsize(video_data['temp_path']) / (1024 * 1024)
+            if tamanho_original > 200:
+                st.info(f"⚡ Arquivo grande ({tamanho_original:.0f}MB) — comprimindo antes de converter...")
+                video_path_para_converter = comprimir_antes_converter(video_data['temp_path'], tempfile.gettempdir())
+            else:
+                video_path_para_converter = video_data['temp_path']
+
             success, message, stats = convert_video(
-                video_data['temp_path'],
+                video_path_para_converter,
                 output_path,
                 profile_config
             )
