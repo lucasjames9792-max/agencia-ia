@@ -389,7 +389,7 @@ with col3:
 st.markdown("---")
 
 # ==================== UPLOAD ====================
-st.header("📁 Enviar Vídeos")
+st.header("📁 Enviar Vídeos — v3")
 
 st.warning("⚠️ **Limite de upload direto: ~100MB** (limitação do proxy do Railway)\n\n"
            "👇 Para vídeos maiores use a **aba de URL** (Google Drive, Dropbox, link direto)")
