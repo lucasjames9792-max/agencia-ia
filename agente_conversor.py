@@ -389,33 +389,33 @@ with col3:
 st.markdown("---")
 
 # ==================== UPLOAD ====================
-st.header("📁 Upload de Vídeos")
+st.header("📁 Enviar Vídeos")
 
-uploaded_files = st.file_uploader(
-    "Arraste múltiplos vídeos aqui ou clique para selecionar",
-    type=['mov', 'avi', 'mkv', 'wmv', 'flv', 'webm', 'm4v', 'mpg', 'mpeg', '3gp', 'mp4'],
-    accept_multiple_files=True
-)
+st.warning("⚠️ **Limite de upload direto: ~100MB** (limitação do proxy do Railway)\n\n"
+           "👇 Para vídeos maiores use a **aba de URL** (Google Drive, Dropbox, link direto)")
 
-if uploaded_files:
-    st.success(f"✅ **{len(uploaded_files)} arquivo(s) carregado(s)**")
+tab_upload, tab_url = st.tabs(["📤 Upload direto (até 100MB)", "🔗 URL / Google Drive (sem limite)"])
 
-    with st.expander("📊 Análise Prévia dos Vídeos", expanded=True):
-        total_size = 0
-        total_duration = 0
-        video_analysis = []
+video_analysis = []
 
+# ---------- ABA 1: Upload direto ----------
+with tab_upload:
+    uploaded_files = st.file_uploader(
+        "Arraste vídeos aqui (máx ~100MB por arquivo neste servidor)",
+        type=['mov', 'avi', 'mkv', 'wmv', 'flv', 'webm', 'm4v', 'mpg', 'mpeg', '3gp', 'mp4'],
+        accept_multiple_files=True
+    )
+
+    if uploaded_files:
+        st.success(f"✅ **{len(uploaded_files)} arquivo(s) carregado(s)**")
         for uploaded_file in uploaded_files:
             with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as tmp_file:
                 uploaded_file.seek(0)
-                shutil.copyfileobj(uploaded_file, tmp_file, length=1024 * 1024)  # chunks de 1MB
+                shutil.copyfileobj(uploaded_file, tmp_file, length=1024 * 1024)
                 tmp_path = tmp_file.name
             gc.collect()
 
             info = get_video_info(tmp_path)
-            total_size += info['size_mb']
-            total_duration += info['duration']
-
             video_analysis.append({
                 'Nome': uploaded_file.name,
                 'Tamanho': info['size_formatted'],
@@ -423,6 +423,78 @@ if uploaded_files:
                 'Resolução': info['resolution'],
                 'temp_path': tmp_path
             })
+
+# ---------- ABA 2: URL ----------
+with tab_url:
+    st.markdown("""
+    **Como usar com Google Drive:**
+    1. Faça upload do vídeo no Google Drive
+    2. Clique com botão direito → **Compartilhar** → **Qualquer pessoa com o link**
+    3. Copie o link e cole abaixo
+
+    **Funciona também com:** Dropbox, WeTransfer, links diretos de vídeo (.mp4, .mov...)
+    """)
+
+    urls_texto = st.text_area(
+        "Cole as URLs (uma por linha):",
+        placeholder="https://drive.google.com/file/d/SEU_ID/view\nhttps://www.dropbox.com/s/xxx/video.mp4",
+        height=120
+    )
+
+    def baixar_url(url: str, output_path: str) -> bool:
+        """Baixa vídeo de URL, com suporte a Google Drive."""
+        try:
+            import urllib.request
+            import urllib.parse
+
+            # Converter Google Drive share link para download direto
+            if "drive.google.com" in url:
+                if "/file/d/" in url:
+                    file_id = url.split("/file/d/")[1].split("/")[0]
+                    url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm=t"
+                elif "id=" in url:
+                    file_id = url.split("id=")[1].split("&")[0]
+                    url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm=t"
+
+            # Dropbox: mudar ?dl=0 para ?dl=1
+            if "dropbox.com" in url:
+                url = url.replace("?dl=0", "?dl=1").replace("?dl=0", "?dl=1")
+                if "?dl=" not in url:
+                    url += "?dl=1"
+
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=300) as response:
+                with open(output_path, 'wb') as f:
+                    shutil.copyfileobj(response, f, length=1024 * 1024)
+            return True
+        except Exception as e:
+            st.error(f"❌ Erro ao baixar URL: {e}")
+            return False
+
+    if urls_texto.strip():
+        urls = [u.strip() for u in urls_texto.strip().splitlines() if u.strip()]
+        if st.button("⬇️ Baixar vídeos das URLs", use_container_width=True):
+            for i, url in enumerate(urls):
+                nome = f"video_url_{i+1}.mp4"
+                tmp_path = os.path.join(tempfile.gettempdir(), nome)
+                with st.spinner(f"Baixando {url[:60]}..."):
+                    if baixar_url(url, tmp_path):
+                        info = get_video_info(tmp_path)
+                        video_analysis.append({
+                            'Nome': nome,
+                            'Tamanho': info['size_formatted'],
+                            'Duração': info['duration_formatted'],
+                            'Resolução': info['resolution'],
+                            'temp_path': tmp_path
+                        })
+                        st.success(f"✅ Baixado: {info['size_formatted']}")
+
+# ---------- ANÁLISE PRÉVIA ----------
+if video_analysis:
+    with st.expander("📊 Análise Prévia dos Vídeos", expanded=True):
+        total_size = sum(get_video_info(v['temp_path'])['size_mb'] for v in video_analysis)
+        total_duration = sum(get_video_info(v['temp_path'])['duration'] for v in video_analysis)
 
         df_analysis = pd.DataFrame(video_analysis)
         st.dataframe(df_analysis[['Nome', 'Tamanho', 'Duração', 'Resolução']], use_container_width=True)
