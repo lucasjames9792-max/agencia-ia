@@ -16,5 +16,7 @@ CMD streamlit run agente_conversor.py \
     --server.address=0.0.0.0 \
     --server.maxUploadSize=2000 \
     --server.maxMessageSize=2000 \
+    --server.headless=true \
     --server.enableXsrfProtection=false \
-    --server.enableCORS=false
+    --server.enableCORS=false \
+    --browser.gatherUsageStats=false

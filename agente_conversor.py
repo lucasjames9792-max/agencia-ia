@@ -9,6 +9,8 @@ import time
 from typing import List, Dict, Tuple
 import zipfile
 import io
+import shutil
+import gc
 
 # ==================== CONFIGURAÇÃO DA PÁGINA ====================
 st.set_page_config(
@@ -405,8 +407,10 @@ if uploaded_files:
 
         for uploaded_file in uploaded_files:
             with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as tmp_file:
-                tmp_file.write(uploaded_file.read())
+                uploaded_file.seek(0)
+                shutil.copyfileobj(uploaded_file, tmp_file, length=1024 * 1024)  # chunks de 1MB
                 tmp_path = tmp_file.name
+            gc.collect()
 
             info = get_video_info(tmp_path)
             total_size += info['size_mb']
