@@ -12,7 +12,7 @@ import io
 import shutil
 import gc
 
-# ==================== CONFIGURAÇÃO DA PÁGINA ====================
+# ==================== CONFIGURAÇÃO DA PÁGINA ==================== v2
 st.set_page_config(
     page_title="🎬 Agente Conversor Mass Media PRO",
     page_icon="🎬",
