@@ -587,11 +587,13 @@ if st.session_state.processing and st.session_state.conversion_queue:
             else:
                 video_path_para_converter = video_data['temp_path']
 
+            print(f"[DEBUG2] Chamando ffmpeg: input={video_path_para_converter}, output={output_path}", file=sys.stderr, flush=True)
             success, message, stats = convert_video(
                 video_path_para_converter,
                 output_path,
                 profile_config
             )
+            print(f"[DEBUG2] Resultado: success={success}, msg={message[:100]}", file=sys.stderr, flush=True)
 
             individual_progress.progress(100)
 
@@ -644,7 +646,15 @@ if st.session_state.processing and st.session_state.conversion_queue:
     time.sleep(1)
     st.rerun()
 
+# ==================== ERROS ====================
+if st.session_state.failed_conversions:
+    st.markdown("---")
+    st.header("❌ Conversões com Erro")
+    for failed in st.session_state.failed_conversions:
+        st.error(f"**{failed['name']}**: {failed['error']}")
+
 # ==================== DOWNLOADS ====================
+print(f"[DEBUG3] DOWNLOADS: completed={len(st.session_state.completed_conversions)}, failed={len(st.session_state.failed_conversions)}", file=sys.stderr, flush=True)
 if st.session_state.completed_conversions:
     st.markdown("---")
     st.header("📥 Downloads Disponíveis")
