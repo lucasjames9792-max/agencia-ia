@@ -551,6 +551,10 @@ if video_analysis:
             st.rerun()
 
 # ==================== PROCESSAMENTO ====================
+# Debug temporário
+import sys
+print(f"[DEBUG] processing={st.session_state.processing} | queue_len={len(st.session_state.conversion_queue)} | url_videos_len={len(st.session_state.url_videos)}", flush=True, file=sys.stderr)
+
 if st.session_state.processing and st.session_state.conversion_queue:
     st.markdown("---")
     st.header("⚙️ Processamento em Andamento")
