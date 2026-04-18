@@ -389,12 +389,16 @@ with col3:
 st.markdown("---")
 
 # ==================== UPLOAD ====================
-st.header("📁 Enviar Vídeos — v3")
+st.header("📁 Enviar Vídeos")
 
 st.warning("⚠️ **Limite de upload direto: ~100MB** (limitação do proxy do Railway)\n\n"
            "👇 Para vídeos maiores use a **aba de URL** (Google Drive, Dropbox, link direto)")
 
 tab_upload, tab_url = st.tabs(["📤 Upload direto (até 100MB)", "🔗 URL / Google Drive (sem limite)"])
+
+# Persiste vídeos baixados por URL entre reruns
+if 'url_videos' not in st.session_state:
+    st.session_state.url_videos = []
 
 video_analysis = []
 
@@ -442,32 +446,27 @@ with tab_url:
     )
 
     def baixar_url(url: str, output_path: str) -> bool:
-        """Baixa vídeo de URL, com suporte a Google Drive."""
+        """Baixa vídeo de URL, com suporte a Google Drive (gdown) e links diretos."""
         try:
-            import urllib.request
-            import urllib.parse
-
-            # Converter Google Drive share link para download direto
             if "drive.google.com" in url:
-                if "/file/d/" in url:
-                    file_id = url.split("/file/d/")[1].split("/")[0]
-                    url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm=t"
-                elif "id=" in url:
-                    file_id = url.split("id=")[1].split("&")[0]
-                    url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm=t"
-
-            # Dropbox: mudar ?dl=0 para ?dl=1
-            if "dropbox.com" in url:
-                url = url.replace("?dl=0", "?dl=1").replace("?dl=0", "?dl=1")
-                if "?dl=" not in url:
-                    url += "?dl=1"
-
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=300) as response:
-                with open(output_path, 'wb') as f:
-                    shutil.copyfileobj(response, f, length=1024 * 1024)
-            return True
+                # Usa gdown para Google Drive (lida com confirmação de vírus automaticamente)
+                import gdown
+                gdown.download(url, output_path, quiet=False, fuzzy=True)
+                return os.path.exists(output_path) and os.path.getsize(output_path) > 1000
+            else:
+                import requests
+                # Dropbox: forçar download direto
+                if "dropbox.com" in url:
+                    url = url.replace("?dl=0", "?dl=1")
+                    if "?dl=" not in url:
+                        url += "?dl=1"
+                headers = {'User-Agent': 'Mozilla/5.0'}
+                with requests.get(url, headers=headers, stream=True, timeout=300) as r:
+                    r.raise_for_status()
+                    with open(output_path, 'wb') as f:
+                        for chunk in r.iter_content(chunk_size=1024 * 1024):
+                            f.write(chunk)
+                return True
         except Exception as e:
             st.error(f"❌ Erro ao baixar URL: {e}")
             return False
@@ -475,20 +474,35 @@ with tab_url:
     if urls_texto.strip():
         urls = [u.strip() for u in urls_texto.strip().splitlines() if u.strip()]
         if st.button("⬇️ Baixar vídeos das URLs", use_container_width=True):
+            st.session_state.url_videos = []  # Limpa lista anterior
             for i, url in enumerate(urls):
-                nome = f"video_url_{i+1}.mp4"
+                ext = ".mp4"
+                # Tenta detectar extensão da URL
+                url_lower = url.lower().split("?")[0]
+                for fmt in ['.mov', '.avi', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.mp4']:
+                    if url_lower.endswith(fmt):
+                        ext = fmt
+                        break
+                nome = f"video_url_{i+1}{ext}"
                 tmp_path = os.path.join(tempfile.gettempdir(), nome)
                 with st.spinner(f"Baixando {url[:60]}..."):
                     if baixar_url(url, tmp_path):
                         info = get_video_info(tmp_path)
-                        video_analysis.append({
+                        st.session_state.url_videos.append({
                             'Nome': nome,
                             'Tamanho': info['size_formatted'],
                             'Duração': info['duration_formatted'],
                             'Resolução': info['resolution'],
                             'temp_path': tmp_path
                         })
-                        st.success(f"✅ Baixado: {info['size_formatted']}")
+                        st.success(f"✅ Baixado: {nome} — {info['size_formatted']}")
+
+    # Mostra vídeos já baixados desta sessão
+    if st.session_state.url_videos:
+        st.info(f"📋 {len(st.session_state.url_videos)} vídeo(s) prontos para conversão. Clique em **CONVERTER** abaixo.")
+
+# Combina vídeos de upload com vídeos baixados por URL
+video_analysis.extend(st.session_state.url_videos)
 
 # ---------- ANÁLISE PRÉVIA ----------
 if video_analysis:
@@ -526,6 +540,7 @@ if video_analysis:
             for video in video_analysis:
                 if os.path.exists(video['temp_path']):
                     os.unlink(video['temp_path'])
+            st.session_state.url_videos = []
             st.rerun()
 
     with col_b3:

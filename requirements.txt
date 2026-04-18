@@ -1,6 +1,7 @@
 anthropic
 streamlit>=1.28.0,<2.0.0
 requests
+gdown
 python-dotenv
 pandas
 zipfile36
