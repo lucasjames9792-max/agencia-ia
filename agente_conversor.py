@@ -224,12 +224,17 @@ def get_video_info(file_path: str) -> Dict:
 
 def convert_video(input_path: str, output_path: str, profile_config: Dict) -> Tuple[bool, str, Dict]:
     try:
-        cmd = ['ffmpeg', '-i', input_path]
+        cmd = ['ffmpeg', '-hide_banner', '-i', input_path]
+
+        # Mapear streams: vídeo obrigatório, áudio opcional (? = não falha se não existir)
+        cmd.extend(['-map', '0:v:0'])
+        cmd.extend(['-map', '0:a:0?'])
+
         cmd.extend(['-c:v', profile_config['video_codec']])
         cmd.extend(['-b:v', profile_config['video_bitrate']])
 
         if profile_config.get('resolution'):
-            cmd.extend(['-vf', f"scale={profile_config['resolution']}:force_original_aspect_ratio=decrease"])
+            cmd.extend(['-vf', f"scale={profile_config['resolution']}:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2"])
 
         if profile_config.get('fps'):
             cmd.extend(['-r', profile_config['fps']])
@@ -261,7 +266,7 @@ def convert_video(input_path: str, output_path: str, profile_config: Dict) -> Tu
             }
             return True, "✅ Conversão concluída com sucesso!", stats
         else:
-            return False, f"❌ Erro na conversão: {stderr[:200]}", {}
+            return False, f"❌ Erro na conversão: {stderr[:1500]}", {}
 
     except Exception as e:
         return False, f"❌ Erro: {str(e)}", {}
