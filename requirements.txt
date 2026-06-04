@@ -5,3 +5,4 @@ gdown
 python-dotenv
 pandas
 zipfile36
+apscheduler

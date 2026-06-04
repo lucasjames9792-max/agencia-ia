@@ -2,10 +2,10 @@
 import streamlit as st
 import requests
 import json
-import threading
 from dotenv import load_dotenv
 from anthropic import Anthropic
 from datetime import datetime, timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # ─── CONFIGURAÇÕES ───────────────────────────────────
 load_dotenv()
@@ -109,18 +109,26 @@ def postar_midia(arquivo_bytes, nome, legenda, botoes):
 def executar_post_agendado(post):
     postar_midia(post["bytes"], post["nome"], post["copy"], post["botoes"])
 
+def get_scheduler():
+    if "scheduler" not in st.session_state:
+        scheduler = BackgroundScheduler(daemon=False)
+        scheduler.start()
+        st.session_state.scheduler = scheduler
+    return st.session_state.scheduler
+
 def iniciar_agendador(fila):
-    def rodar():
-        for post in fila:
-            horario_obj = post["horario_obj"]
-            agora = datetime.now()
-            if horario_obj > agora:
-                delay = (horario_obj - agora).total_seconds()
-                t = threading.Timer(delay, executar_post_agendado, args=[post])
-                t.daemon = True
-                t.start()
-    thread = threading.Thread(target=rodar, daemon=True)
-    thread.start()
+    scheduler = get_scheduler()
+    for post in fila:
+        horario_obj = post["horario_obj"]
+        if horario_obj > datetime.now():
+            scheduler.add_job(
+                executar_post_agendado,
+                trigger="date",
+                run_date=horario_obj,
+                args=[post],
+                id=f"post_{post['id']}_{horario_obj.timestamp()}",
+                replace_existing=True
+            )
 
 # ─── INTERFACE ───────────────────────────────────────
 st.set_page_config(
@@ -134,6 +142,8 @@ st.caption("Upload em massa • Copy automática • Agendamento • Recorrênci
 
 if "fila_posts" not in st.session_state:
     st.session_state.fila_posts = []
+
+get_scheduler()
 
 # ─── SIDEBAR ─────────────────────────────────────────
 with st.sidebar:
