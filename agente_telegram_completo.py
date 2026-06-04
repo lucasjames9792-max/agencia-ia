@@ -294,15 +294,34 @@ if midias:
                             "status":      "⏳ Aguardando"
                         })
 
-        st.subheader("4️⃣ Agendar todos os posts")
+        st.subheader("4️⃣ Publicar ou Agendar")
         st.info(f"📅 {len(posts_configurados)} post(s) configurado(s) • Recorrência 24h")
 
         if posts_configurados:
-            if st.button(f"🚀 AGENDAR {len(posts_configurados)} POSTS", type="primary"):
-                st.session_state.fila_posts = posts_configurados
-                iniciar_agendador(posts_configurados)
-                st.success(f"✅ {len(posts_configurados)} posts agendados!")
-                st.balloons()
+            col_now, col_sched = st.columns(2)
+
+            with col_now:
+                if st.button(f"📤 POSTAR AGORA ({len(posts_configurados)})", type="primary"):
+                    barra = st.progress(0)
+                    erros = []
+                    for i, post in enumerate(posts_configurados):
+                        with st.spinner(f"Postando {post['nome']}..."):
+                            resultado = postar_midia(post["bytes"], post["nome"], post["copy"], post["botoes"])
+                            if resultado.get("ok"):
+                                st.success(f"✅ {post['nome']} postado!")
+                            else:
+                                erros.append(post["nome"])
+                                st.error(f"❌ Erro em {post['nome']}: {resultado.get('description','')}")
+                        barra.progress((i + 1) / len(posts_configurados))
+                    if not erros:
+                        st.balloons()
+
+            with col_sched:
+                if st.button(f"🚀 AGENDAR {len(posts_configurados)} POSTS"):
+                    st.session_state.fila_posts = posts_configurados
+                    iniciar_agendador(posts_configurados)
+                    st.success(f"✅ {len(posts_configurados)} posts agendados!")
+                    st.balloons()
 
 if st.session_state.fila_posts:
     st.divider()
