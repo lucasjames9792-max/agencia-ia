@@ -1,4 +1,6 @@
 ﻿import os
+import subprocess
+import tempfile
 import streamlit as st
 import requests
 import json
@@ -6,6 +8,8 @@ from dotenv import load_dotenv
 from anthropic import Anthropic
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
+
+TELEGRAM_MAX_BYTES = 45 * 1024 * 1024  # 45 MB
 
 # ─── CONFIGURAÇÕES ───────────────────────────────────
 load_dotenv()
@@ -85,6 +89,28 @@ def gerar_copy(contexto, modo_aniversario=False, preco=None):
     )
     return r.content[0].text
 
+# ─── COMPRIMIR VÍDEO ─────────────────────────────────
+def comprimir_video(video_bytes):
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp_in:
+        tmp_in.write(video_bytes)
+        tmp_in_path = tmp_in.name
+    tmp_out_path = tmp_in_path + "_out.mp4"
+    try:
+        subprocess.run(
+            ["ffmpeg", "-hide_banner", "-y", "-i", tmp_in_path,
+             "-vcodec", "libx264", "-crf", "28", "-preset", "fast",
+             "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+             "-map", "0:v:0", "-map", "0:a:0?",
+             "-acodec", "aac", "-b:a", "128k", tmp_out_path],
+            capture_output=True, timeout=120
+        )
+        with open(tmp_out_path, "rb") as f:
+            return f.read()
+    finally:
+        for p in [tmp_in_path, tmp_out_path]:
+            if os.path.exists(p):
+                os.unlink(p)
+
 # ─── POSTAR MÍDIA ────────────────────────────────────
 def postar_midia(arquivo_bytes, nome, legenda, botoes):
     ext = nome.split(".")[-1].lower()
@@ -96,6 +122,8 @@ def postar_midia(arquivo_bytes, nome, legenda, botoes):
             files={"photo": (nome, arquivo_bytes)}
         )
     else:
+        if len(arquivo_bytes) > TELEGRAM_MAX_BYTES:
+            arquivo_bytes = comprimir_video(arquivo_bytes)
         r = requests.post(
             f"{TG_URL}/sendVideo",
             data={"chat_id": CHANNEL_ID, "caption": legenda,
