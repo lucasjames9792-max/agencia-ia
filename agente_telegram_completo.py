@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 
 # ─── CONFIGURAÇÕES ───────────────────────────────────
 load_dotenv()
-client     = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY=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"])
-BOT_TOKEN  = os.environ["TELEGRAM_BOT_TOKEN=8515965234:AAGXk-oO5AzqoPlojHoIIfoh7UNnE635i8g"]
+client     = Anthropic(api_key=os.environ=["ANTHROPIC_API_KEY=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"])
+BOT_TOKEN  = os.environ=["TELEGRAM_BOT_TOKEN=8515965234:AAGXk-oO5AzqoPlojHoIIfoh7UNnE635i8g"]
 CHANNEL_ID = "@hvinha"
 TG_URL     = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
